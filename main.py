@@ -1,35 +1,44 @@
-# # Start your program and a GUI is generated
-# # https://www.pysimplegui.org/en/latest/
-
 import PySimpleGUI as sg
+from CodeSmellDetector import CodeSmellDetector
 
-sg.theme('BluePurple')   # Add a touch of color
-# All the stuff inside your window.
-layout = [  [sg.Text('This tool analyzes the code in your file and detects duplicated code. ')],
-            [sg.Button('Upload File'), sg.Button('Start Analysis'), sg.Button('Exit')] ]
+# sources: https://www.pysimplegui.com/ using persistent window
+# https://www.reddit.com/r/learnpython/comments/mosgc5/updating_text_with_pysimplegui/
 
-# Create the Window
-window = sg.Window('Code Smell Detector and Refactoring Tool', layout)
+def read_file(file_path):
+    with open(file_path, 'r') as file:
+        return file.read()
 
-# Event Loop to process "events" and get the "values" of the inputs
-while True:
-    event, values = window.read()
-    if event == 'Upload File':
-        layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(), sg.FileBrowse(key="-IN-")],[sg.Button("Submit")]]
+def upload_file(values, window):
+    source_code = read_file(values['-FILE_PATH-'])
+    window['-SOURCE_CODE-'].update(value = source_code)
 
-        #Building Window
-        window = sg.Window('My File Browser', layout, size=(600,150))
+def analyze_file_for_code_smells(values, window):
+    source_code = read_file(values['-FILE_PATH-'])
     
-        while True:
-            event, values = window.read()
-            if event == sg.WIN_CLOSED or event=="Exit":
-                break
-            elif event == "Submit":
-                print(values["-IN-"])
+    detector = CodeSmellDetector(source_code)
+    long_method_analysis = detector.find_long_method()
+    long_parameter_list_analysis = detector.find_long_parameter_list()
+    code_smell_results = (long_method_analysis, long_parameter_list_analysis)
+    window['-ANALYSIS_RESULT-'].update(value = code_smell_results)
 
-    if event == sg.WIN_CLOSED or event == 'Exit': # if user closes window or clicks Exit
-        break
-    print('You entered ', values[0])
+def run_gui():
+    sg.theme('BluePurple')
+    layout = [
+        [sg.Text('Choose a file:'), sg.InputText(key='-FILE_PATH-'), sg.FileBrowse()],
+        [sg.Multiline(size=(80, 10), key='-SOURCE_CODE-')],
+        [sg.Button('Upload File'), sg.Button('Analyze File'), sg.Button('Cancel')],
+        [sg.Multiline(size=(80, 10), key='-ANALYSIS_RESULT-')],
+        [sg.Button('Refactor')]
+    ]
+    window = sg.Window('Code Smell Detection and Refactoring Tool', layout)
+    
+    while True:
+        event, values = window.read()
+        if event == sg.WINDOW_CLOSED or event == 'Cancel': break
+        if event == 'Upload File': upload_file(values, window)
+        if event == 'Analyze File': analyze_file_for_code_smells(values, window)
+        if event == 'Refactor': pass
+    window.close()
 
-window.close()
-          
+if __name__ == '__main__':
+    run_gui()
