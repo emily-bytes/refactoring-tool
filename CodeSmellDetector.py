@@ -1,5 +1,5 @@
 from typing import List
-# Assumptions: comments are counted as lines of code and 2) last function goes til end of file 
+
 class CodeSmellDetector:
     def __init__(self, source_code) -> str:
         self.source_code = source_code
@@ -23,7 +23,7 @@ class CodeSmellDetector:
         for index in range(len(lines_starting_with_def) - 1):
             length_of_method = lines_starting_with_def[index + 1] - lines_starting_with_def[index]
             method_lengths.append(length_of_method)
-        length_of_last_method = len(nonblank_lines) - lines_starting_with_def[-1] # Assuming last function goes till end of file 
+        length_of_last_method = len(nonblank_lines) - lines_starting_with_def[-1] 
         method_lengths.append(length_of_last_method)    
         return method_lengths    
         
@@ -40,7 +40,7 @@ class CodeSmellDetector:
         for line_index, length in zip(line_index, method_lengths):
             method_line = sanitized_lines[line_index]
             method_name = method_line.split('def ')[-1].split('(')[0]
-            if length > threshold: long_methods.append(f"Long method detected: {method_name} is longer than {threshold} lines.")
+            if length > threshold: long_methods.append(f"Long method detected: {method_name} has {length} lines.")
         if not long_methods: long_methods.append("No long methods detected.")
         return long_methods     
 
@@ -54,14 +54,15 @@ class CodeSmellDetector:
         parameter_counts = []
         for line in lines_starting_with_def:
             parameter_str = line.split('(')[1].split(')')[0]
-            print(parameter_str)
-            if parameter_str:
-                parameters = parameter_str.split(',')
-                parameter_counts.append(len(parameters))
-            parameter_counts.append(0)
+            print('parameter str:', parameter_str)
+            parameter = parameter_str.count(',')
+            if parameter_str and ',' in parameter_str: parameter_counts.append(parameter + 1)
+            if parameter_str and ',' not in parameter_str: parameter_counts.append(1)
+            if not parameter_str: parameter_counts.append(0)
         return parameter_counts
         
-    def find_long_parameter_list(self) -> str:
+    def find_long_parameter_list(self) -> List[str]:
+        long_parameter_list = []
         threshold = 3
         sanitized_lines = self.get_sanitized_lines()
         lines_starting_with_def = self.get_lines_starting_with_def(sanitized_lines)
@@ -70,9 +71,10 @@ class CodeSmellDetector:
         print('parameter_count:', parameter_counts)
 
         for line_index, count in enumerate(parameter_counts):
-            method_line = lines_starting_with_def[line_index]
-            print(method_line)
+            method_line = lines_starting_with_def[line_index] 
             method_name = method_line.split('def ')[-1].split('(')[0]
-            if count > threshold: return f'Long parameter list detected: {method_name} has greater than {threshold} parameters.'
-        return f'No long parameter list detected.'
+            if count > threshold: long_parameter_list.append(f"Long parameter list detected: {method_name} on line {line_index} has {count} parameters.")
+        if not long_parameter_list: long_parameter_list.append("No long parameter list detected.")
+        return long_parameter_list  
+
     
