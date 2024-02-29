@@ -16,10 +16,8 @@ def analyze_file_for_code_smells(values, window):
     source_code = read_file(values['-FILE_PATH-'])
     
     detector = CodeSmellDetector(source_code)
-    long_methods = detector.find_long_method()
-    # long_parameter_list_analysis = detector.find_long_parameter_list()
-    code_smell_result = '\n'.join(long_methods)
-    window['-ANALYSIS_RESULT-'].update(value = code_smell_result)
+    long_methods, long_parameter_list = detector.find_long_method(), detector.find_long_parameter_list()
+    window['-ANALYSIS_RESULT-'].update(value = '\n'.join(long_methods) + '\n'.join(long_parameter_list))
 
 def run_gui():
     sg.theme('BluePurple')
