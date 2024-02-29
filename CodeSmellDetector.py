@@ -8,8 +8,8 @@ class CodeSmellDetector:
         nonblank_lines = []
         for line in self.source_code.split("\n"):
             stripped_line = line.strip(" ")
-            not_empty_line = stripped_line != ""
-            if not_empty_line: nonblank_lines.append(stripped_line)
+            empty_line = stripped_line == ""
+            if not empty_line: nonblank_lines.append(stripped_line)
         return nonblank_lines
     
     def get_index_of_lines_starting_with_def(self, lines) -> List[int]:
@@ -40,7 +40,7 @@ class CodeSmellDetector:
         for line_index, length in zip(line_index, method_lengths):
             method_line = sanitized_lines[line_index]
             method_name = method_line.split('def ')[-1].split('(')[0]
-            if length > threshold: long_methods.append(f"Long method detected: {method_name} has {length} lines.")
+            if length > threshold: long_methods.append(f"Long method detected: {method_name} contains {length} lines.")
         if not long_methods: long_methods.append("No long methods detected.")
         return long_methods     
 
@@ -73,8 +73,22 @@ class CodeSmellDetector:
         for line_index, count in enumerate(parameter_counts):
             method_line = lines_starting_with_def[line_index] 
             method_name = method_line.split('def ')[-1].split('(')[0]
-            if count > threshold: long_parameter_list.append(f"Long parameter list detected: {method_name} on line {line_index} has {count} parameters.")
+            if count > threshold: long_parameter_list.append(f"\nLong parameter list detected: {method_name} contains {count} parameters.")
         if not long_parameter_list: long_parameter_list.append("No long parameter list detected.")
         return long_parameter_list  
 
-    
+    def find_duplicated_code(self) -> List[str]:
+        duplicated_code = []
+        threshold = 0.75
+
+        sanitized_lines = self.get_sanitized_lines()
+        list_of_functions = self.get_functions(sanitized_lines)
+
+
+
+
+
+
+
+
+        
