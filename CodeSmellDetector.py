@@ -76,13 +76,39 @@ class CodeSmellDetector:
             if count > threshold: long_parameter_list.append(f"\nLong parameter list detected: {method_name} contains {count} parameters.")
         if not long_parameter_list: long_parameter_list.append("No long parameter list detected.")
         return long_parameter_list  
+    
+    def get_dictionary_of_functions(self, lines, def_line_index):
+        functions_dictionary = {}
+        for index in range(len(def_line_index) - 1):
+            start_index = def_line_index[index]
+            end_index = def_line_index[index + 1] - 1
+            print('start and end index:', start_index, end_index)
+
+            function_body, function_name = self.get_function_body(start_index, end_index, lines)
+            print('function name and function body:', function_name, function_body)
+            functions_dictionary[function_name] = function_body
+            print('functions_body', functions_dictionary[function_name])
+        
+        function_body, function_name = self.get_function_body(def_line_index[-1], len(lines), lines)
+        print('function name and function body:', function_name, function_body)
+        functions_dictionary[function_name] = function_body
+        print('functions_body', functions_dictionary[function_name])
+        print('functions dictionary:', functions_dictionary)
+        return functions_dictionary
+
+    def get_function_body(self, start_index, end_index, lines):
+        function_name = lines[start_index].split("def ")[1].split("(")[0]
+        function_body = [line.strip("\n") for line in lines[start_index : end_index + 1]]
+        return function_body, function_name
 
     def find_duplicated_code(self) -> List[str]:
-        duplicated_code = []
+        # duplicated_code = []
         threshold = 0.75
-
-        sanitized_lines = self.get_sanitized_lines()
-        list_of_functions = self.get_functions(sanitized_lines)
+        lines = self.get_sanitized_lines()
+        def_index_lines = self.get_index_of_lines_starting_with_def(lines)
+        print('def_index_lines:', def_index_lines)
+        functions_dictionary = self.get_dictionary_of_functions(lines, def_index_lines)
+        return 0
 
 
 
