@@ -1,5 +1,7 @@
 from typing import List
 
+# source: https://www.geeksforgeeks.org/how-to-calculate-jaccard-similarity-in-python/
+
 class CodeSmellDetector:
     def __init__(self, source_code) -> str:
         self.source_code = source_code
@@ -99,7 +101,6 @@ class CodeSmellDetector:
 
     def find_duplicated_code(self) -> List[str]:
         duplicated_code = []
-        functions_list = []
         threshold = 0.75
         lines = self.get_sanitized_lines()
         def_index_lines = self.get_index_of_lines_starting_with_def(lines)
@@ -109,17 +110,13 @@ class CodeSmellDetector:
         for i in range(len(functions_list)):
             for j in range(i + 1, len(functions_list)):
                 func1 = set(functions_list[i])
-                print(func1)
                 func2 = set(functions_list[j])
-                print(func2)
-
                 similarity = self.calculate_jaccard_similarity(func1, func2)
                 print('similarity', similarity)
 
                 if similarity >= threshold:
-                    duplicated_code.append(f"similar code found between {functions_list[i]} and {functions_list[j]}")
-        if not duplicated_code:
-            duplicated_code.append("No duplciated code detected")
+                    duplicated_code.append(f"Similar code found between {functions_list[i]} and {functions_list[j]}")
+        if not duplicated_code: duplicated_code.append("No duplciated code detected")
         return duplicated_code
 
 
