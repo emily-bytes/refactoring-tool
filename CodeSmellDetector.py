@@ -76,39 +76,52 @@ class CodeSmellDetector:
             if count > threshold: long_parameter_list.append(f"\nLong parameter list detected: {method_name} contains {count} parameters.")
         if not long_parameter_list: long_parameter_list.append("No long parameter list detected.")
         return long_parameter_list  
-    
-    def get_dictionary_of_functions(self, lines, def_line_index):
-        functions_dictionary = {}
+
+    def get_list_of_functions(self, lines, def_line_index):
+        current_function = []
+        functions_list = []
+
         for index in range(len(def_line_index) - 1):
             start_index = def_line_index[index]
             end_index = def_line_index[index + 1] - 1
             print('start and end index:', start_index, end_index)
+            current_function = [line.strip("\n") for line in lines[start_index : end_index + 1]]
+            print('current function:', current_function)
+            functions_list.append(current_function)
+        print('functions list', functions_list)
+        return functions_list
 
-            function_body, function_name = self.get_function_body(start_index, end_index, lines)
-            print('function name and function body:', function_name, function_body)
-            functions_dictionary[function_name] = function_body
-            print('functions_body', functions_dictionary[function_name])
-        
-        function_body, function_name = self.get_function_body(def_line_index[-1], len(lines), lines)
-        print('function name and function body:', function_name, function_body)
-        functions_dictionary[function_name] = function_body
-        print('functions_body', functions_dictionary[function_name])
-        print('functions dictionary:', functions_dictionary)
-        return functions_dictionary
-
-    def get_function_body(self, start_index, end_index, lines):
-        function_name = lines[start_index].split("def ")[1].split("(")[0]
-        function_body = [line.strip("\n") for line in lines[start_index : end_index + 1]]
-        return function_body, function_name
+    def calculate_jaccard_similarity(self, func1, func2):
+        intersection = len(func1.intersection(func2))
+        union = len(func1.union(func2))
+        similarity = intersection / union if union != 0 else 0 
+        return similarity 
 
     def find_duplicated_code(self) -> List[str]:
-        # duplicated_code = []
+        duplicated_code = []
+        functions_list = []
         threshold = 0.75
         lines = self.get_sanitized_lines()
         def_index_lines = self.get_index_of_lines_starting_with_def(lines)
         print('def_index_lines:', def_index_lines)
-        functions_dictionary = self.get_dictionary_of_functions(lines, def_index_lines)
-        return 0
+        functions_list = self.get_list_of_functions(lines, def_index_lines)
+
+        for i in range(len(functions_list)):
+            for j in range(i + 1, len(functions_list)):
+                func1 = set(functions_list[i])
+                print(func1)
+                func2 = set(functions_list[j])
+                print(func2)
+
+                similarity = self.calculate_jaccard_similarity(func1, func2)
+                print('similarity', similarity)
+
+                if similarity >= threshold:
+                    duplicated_code.append(f"similar code found between {functions_list[i]} and {functions_list[j]}")
+        if not duplicated_code:
+            duplicated_code.append("No duplciated code detected")
+        return duplicated_code
+
 
 
 
