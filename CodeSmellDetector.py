@@ -33,11 +33,8 @@ class CodeSmellDetector:
         long_methods = []
         threshold = 15
         sanitized_lines = self.get_sanitized_lines()
-        print('sanitized lines:', sanitized_lines)
         line_index = self.get_index_of_lines_starting_with_def(sanitized_lines)
-        print('line index:', line_index)
         method_lengths = self.count_lines_between_methods(sanitized_lines, line_index)
-        print('method lengths:', method_lengths)
 
         for line_index, length in zip(line_index, method_lengths):
             method_line = sanitized_lines[line_index]
@@ -46,7 +43,7 @@ class CodeSmellDetector:
         if not long_methods: long_methods.append("No long methods detected.")
         return long_methods     
 
-    def get_lines_starting_with_def(self, nonblank_lines) -> str:
+    def get_lines_starting_with_def(self, nonblank_lines) -> List[str]:
         line_starting_with_def = []   
         for line in nonblank_lines:
             if line.startswith("def"): line_starting_with_def.append(line)
@@ -56,7 +53,6 @@ class CodeSmellDetector:
         parameter_counts = []
         for line in lines_starting_with_def:
             parameter_str = line.split('(')[1].split(')')[0]
-            print('parameter str:', parameter_str)
             parameter = parameter_str.count(',')
             if parameter_str and ',' in parameter_str: parameter_counts.append(parameter + 1)
             if parameter_str and ',' not in parameter_str: parameter_counts.append(1)
@@ -68,9 +64,7 @@ class CodeSmellDetector:
         threshold = 3
         sanitized_lines = self.get_sanitized_lines()
         lines_starting_with_def = self.get_lines_starting_with_def(sanitized_lines)
-        print('\nlines_starting_with_def:', lines_starting_with_def)
         parameter_counts = self.get_parameter_count(lines_starting_with_def)
-        print('parameter_count:', parameter_counts)
 
         for line_index, count in enumerate(parameter_counts):
             method_line = lines_starting_with_def[line_index] 
@@ -82,15 +76,11 @@ class CodeSmellDetector:
     def get_list_of_functions(self, lines, def_line_index):
         current_function = []
         functions_list = []
-
         for index in range(len(def_line_index) - 1):
             start_index = def_line_index[index]
             end_index = def_line_index[index + 1] - 1
-            print('start and end index:', start_index, end_index)
             current_function = [line.strip("\n") for line in lines[start_index : end_index + 1]]
-            print('current function:', current_function)
-            functions_list.append(current_function)
-        print('functions list', functions_list)
+            functions_list.append((current_function, start_index, end_index))
         return functions_list
 
     def calculate_jaccard_similarity(self, func1, func2):
@@ -98,26 +88,42 @@ class CodeSmellDetector:
         union = len(func1.union(func2))
         similarity = intersection / union if union != 0 else 0 
         return similarity 
-
-    def find_duplicated_code(self) -> List[str]:
-        duplicated_code = []
+        
+    def find_duplicated_code(self):
+        duplicated_code, remove_list = [], []
         threshold = 0.75
         lines = self.get_sanitized_lines()
         def_index_lines = self.get_index_of_lines_starting_with_def(lines)
-        print('def_index_lines:', def_index_lines)
         functions_list = self.get_list_of_functions(lines, def_index_lines)
 
         for i in range(len(functions_list)):
             for j in range(i + 1, len(functions_list)):
-                func1 = set(functions_list[i])
-                func2 = set(functions_list[j])
-                similarity = self.calculate_jaccard_similarity(func1, func2)
-                print('similarity', similarity)
+                func1, func2 = [], []
+                for line in functions_list[i][0]:
+                    func1 += line.split(" ")
+                for line in functions_list[j][0]:
+                    func2 += line.split(" ")
+                similarity = self.calculate_jaccard_similarity(set(func1), set(func2))
 
                 if similarity >= threshold:
-                    duplicated_code.append(f"Similar code found between {functions_list[i]} and {functions_list[j]}")
+                   duplicated_code.append(f"Similar code found between {functions_list[i]} and {functions_list[j]}") 
+                   remove_list.append(functions_list[i]) 
         if not duplicated_code: duplicated_code.append("No duplciated code detected")
-        return duplicated_code
+        code_with_removed_duplicates = self.remove_duplicated_code(remove_list)
+        return duplicated_code, code_with_removed_duplicates
+    
+    def remove_duplicated_code(self, remove_list):
+        indexes_to_remove = [list(range(start_index, stop_index + 1)) for _, start_index, stop_index in remove_list]
+        indexes_to_remove = set([index for group in indexes_to_remove for index in group])
+        source_code = [line for line in self.source_code.split("\n") if line.strip(" ") != ""]
+        filtered_source_code = [line for i, line in enumerate(source_code) if i not in indexes_to_remove]
+        source_code_str = ""
+        for line in filtered_source_code:
+            source_code_str += line + "\n"
+        return source_code_str
+
+ 
+
 
 
 
