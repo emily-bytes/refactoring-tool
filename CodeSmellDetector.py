@@ -88,7 +88,13 @@ class CodeSmellDetector:
         union = len(func1.union(func2))
         similarity = intersection / union if union != 0 else 0 
         return similarity 
-        
+                
+    def split_lines_by_space(self, functions_list, index):
+        func = []
+        for line in functions_list[index][0]:
+            func += line.split(" ")
+        return func
+    
     def find_duplicated_code(self) -> Tuple[List[str], List[str]]:
         duplicated_code, remove_list = [], []
         threshold = 0.75
@@ -98,13 +104,8 @@ class CodeSmellDetector:
 
         for i in range(len(functions_list)):
             for j in range(i + 1, len(functions_list)):
-                func1, func2 = [], []
-                for line in functions_list[i][0]:
-                    func1 += line.split(" ")
-                for line in functions_list[j][0]:
-                    func2 += line.split(" ")
+                func1, func2 = self.split_lines_by_space(functions_list, i), self.split_lines_by_space(functions_list, j)  
                 similarity = self.calculate_jaccard_similarity(set(func1), set(func2))
-
                 if similarity >= threshold:
                    duplicated_code.append(f"'\nSimilar code found between {functions_list[i]} and {functions_list[j]}") 
                    remove_list.append(functions_list[i]) 
