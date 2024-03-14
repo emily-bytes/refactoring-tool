@@ -17,7 +17,9 @@ def analyze_file_for_code_smells(values, window):
     
     detector = CodeSmellDetector(source_code)
     long_methods, long_parameter_list = detector.find_long_method(), detector.find_long_parameter_list()
-    window['-ANALYSIS_RESULT-'].update(value = '\n'.join(long_methods) + '\n'.join(long_parameter_list))
+    duplicated_code, code_with_removed_duplicates = detector.find_duplicated_code()
+    window['-ANALYSIS_RESULT-'].update(value = '\n'.join(long_methods) + '\n'.join(long_parameter_list) + '\n'.join(duplicated_code))
+    window['-REFACTORED_CODE-'].update(value = code_with_removed_duplicates)
 
 def run_gui():
     sg.theme('BluePurple')
@@ -26,7 +28,7 @@ def run_gui():
         [sg.Multiline(size=(80, 10), key='-SOURCE_CODE-')],
         [sg.Button('Upload File'), sg.Button('Analyze File'), sg.Button('Cancel')],
         [sg.Multiline(size=(80, 10), key='-ANALYSIS_RESULT-')],
-        [sg.Button('Refactor')]
+        [sg.Multiline(size=(80, 10), key='-REFACTORED_CODE-')],
     ]
     window = sg.Window('Code Smell Detection and Refactoring Tool', layout)
     
@@ -35,7 +37,6 @@ def run_gui():
         if event == sg.WINDOW_CLOSED or event == 'Cancel': break
         if event == 'Upload File': upload_file(values, window)
         if event == 'Analyze File': analyze_file_for_code_smells(values, window)
-        if event == 'Refactor': pass
     window.close()
 
 if __name__ == '__main__':
