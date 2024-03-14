@@ -1,4 +1,5 @@
 from typing import List
+from typing import Tuple
 
 # source: https://www.geeksforgeeks.org/how-to-calculate-jaccard-similarity-in-python/
 
@@ -88,7 +89,7 @@ class CodeSmellDetector:
         similarity = intersection / union if union != 0 else 0 
         return similarity 
         
-    def find_duplicated_code(self) -> 'tuple[List[str], List[str]]':
+    def find_duplicated_code(self) -> Tuple[List[str], List[str]]:
         duplicated_code, remove_list = [], []
         threshold = 0.75
         lines = self.get_sanitized_lines()
